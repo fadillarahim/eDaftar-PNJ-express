@@ -1,0 +1,157 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DB_URL")
+  schemas  = ["master"]
+}
+
+model MasterUser {
+  id               Int         @id @default(autoincrement())
+  username         String      @unique
+  nationalIdNumber String?
+  password         String
+  email            String?
+  roleId           Int?
+  createdAt        DateTime    @default(now())
+  createdBy        String?
+  updatedAt        DateTime?   @updatedAt
+  updatedBy        String?
+  status           Boolean?    @default(true)
+  masterRole       MasterRole? @relation(fields: [roleId], references: [id])
+
+  @@map("master_user")
+  @@schema("master")
+}
+
+model MasterRole {
+  id                Int                 @id @default(autoincrement())
+  name              String              @unique
+  isAdmin           Boolean?            @default(false)
+  createdAt         DateTime?           @default(now())
+  createdBy         String?
+  status            Boolean?            @default(true)
+  masterUser        MasterUser[]
+  RolePermissionMap RolePermissionMap[]
+
+  @@map("master_role")
+  @@schema("master")
+}
+
+model MasterPermission {
+  id                Int                 @id @default(autoincrement())
+  name              String              @unique
+  rolePermissionMap RolePermissionMap[]
+
+  @@map("master_permission")
+  @@schema("master")
+}
+
+model RolePermissionMap {
+  id               Int              @id @default(autoincrement())
+  roleId           Int
+  permissionId     Int
+  MasterPermission MasterPermission @relation(fields: [permissionId], references: [id])
+  masterRole       MasterRole       @relation(fields: [roleId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@map("role_permission_map")
+  @@schema("master")
+}
+
+model MasterProvinsi {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  MasterKabupatenKota MasterKabupatenKota[]
+
+  @@map("master_provinsi")
+  @@schema("master")
+}
+
+model MasterKabupatenKota {
+  id         Int    @id @default(autoincrement())
+  provinsiId Int
+  name       String
+
+  MasterProvinsi MasterProvinsi @relation(fields: [provinsiId], references: [id])
+
+  @@map("master_kabupaten_kota")
+  @@schema("master")
+}
+
+model MasterReligion {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  MasterPendaftar MasterPendaftar[]
+
+  @@map("master_religion")
+  @@schema("master")
+}
+
+model MasterPendaftar {
+  id                  Int       @id @default(autoincrement())
+  nationalIdNumber    String // NIK
+  fullName            String // fullname
+  idCardAddress       String // idCardAddress
+  currentAddress      String // alamatDomisili
+  provinceIdAddress   String // IdPropinsiAlamat
+  provinceNameAddress String // NamaPropinsiAlamat
+  cityIdAddress       String // IdKabupatenKotaAlamat
+  cityNameAddress     String // NamaKabupatenKotaAlamat
+  districtIdAddress   String // IdKecamatanAlamat
+  districtNameAddress String // NamaKecamatanAlamat
+  citizenship         String // kewarganegaraan
+  isForeigner         Boolean? // isWNA
+  foreignCountry      String? // negaraWNA
+  placeOfBirth        String // tempatLahir
+  birthProvinceId     String? // IdPropinsiLahir
+  birthProvinceName   String? // NamaPropinsiLahir
+  birthCityId         String? // IdKabupatenKotaLahir
+  birthCityName       String // NamaKabupatenKotaLahir
+  bornAbroad          Boolean? // isLahirDiluarNegeri
+  birthCountry        String? // negaraLahir
+  dateOfBirth         DateTime // tanggalLahir
+  gender              String // gender
+  religionId          Int // religionId
+  maritalStatus       String // statusPernikahan
+  telephoneNumber     String // telp
+  phoneNumber         String // phoneNumber
+  email               String // email
+  createdAt           DateTime  @default(now()) // createdAt
+  createdBy           String? // createdBy
+  updatedAt           DateTime? @updatedAt // updatedAt
+  updatedBy           String? // updatedBy
+  status              String    @default("DRAFT")
+
+  PendaftarRekapNilaiMap PendaftarRekapNilaiMap[]
+
+  MasterReligion MasterReligion @relation(fields: [religionId], references: [id])
+
+  @@map("master_pendaftar")
+  @@schema("master")
+}
+
+model PendaftarRekapNilaiMap {
+  id              Int       @id @default(autoincrement())
+  pendaftarId     Int
+  matematika      Float
+  bahasaInggris   Float
+  bahasaIndonesia Float
+  ipa             Float
+  ips             Float
+  agama           Float
+  createdAt       DateTime  @default(now())
+  createdBy       String?
+  updatedAt       DateTime? @updatedAt
+  updatedBy       String?
+
+  MasterPendaftar MasterPendaftar @relation(fields: [pendaftarId], references: [id])
+
+  @@map("pendaftar_rekap_nilai_map")
+  @@schema("master")
+}
